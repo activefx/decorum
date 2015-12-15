@@ -5,11 +5,11 @@ describe 'a Fibonacci sequence implemented in Decorators' do
 
   before(:each) do
     100.times do
-      fibber.decorate(Decorum::Examples::FibonacciDecorator)
+      fibber.use_decorum(Decorum::Examples::FibonacciDecorator)
     end
   end
 
-  it 'returns the 100th term' do 
+  it 'returns the 100th term' do
     expect(fibber.fib).to eq(927372692193078999176)
   end
 

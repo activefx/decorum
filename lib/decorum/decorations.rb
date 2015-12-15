@@ -10,7 +10,7 @@ module Decorum
 
         @_decorum_stack ||= []
 
-       if !args.empty? 
+       if !args.empty?
           args.each do |arg|
             if (arg.is_a?(Class) && arg.ancestors.include?(Decorum::Decorator)) || arg.is_a?(Hash)
               next if arg.is_a?(Hash)
@@ -25,13 +25,13 @@ module Decorum
         else
           @_decorum_stack_reverse ? @_decorum_stack.reverse : @_decorum_stack
         end
-      end 
+      end
     end
-  
+
     # public instance methods
 
 
-    def decorate(klass, options={})
+    def use_decorum(klass, options={})
       if namespace_method = options.delete(:namespace)
         decorator = nil
         namespace = nil
@@ -40,10 +40,10 @@ module Decorum
           unless namespace.is_a?(Decorum::DecoratorNamespace)
             raise RuntimeError, "#{namespace_method} exists and is not a decorator namespace"
           end
-          namespace.decorate(klass, options) { |d| decorator = d }
+          namespace.use_decorum(klass, options) { |d| decorator = d }
         else
           namespace   = Decorum::DecoratorNamespace.new(self)
-          namespace.decorate(klass, options) { |d| decorator = d }
+          namespace.use_decorum(klass, options) { |d| decorator = d }
           instance_variable_set(:"@_decorum_#{namespace_method}", namespace)
           m = Module.new do
             define_method(namespace_method) do
@@ -59,7 +59,7 @@ module Decorum
         decorator = add_to_decorator_chain(klass, options)
         yield CallableDecorator.new(decorator) if block_given?
         decorator.post_decorate
-      end 
+      end
       self
     end
 
@@ -67,11 +67,11 @@ module Decorum
       remove_from_decorator_chain(target)
       self
     end
-    
+
     def is_decorated?
       ![ decorators, _decorator_namespaces.map { |ns| send(ns).decorators } ].flatten.empty?
     end
-   
+
     # returns callable decorators---use this
     def decorators
       _decorators.map { |d| CallableDecorator.new(d) }
@@ -79,7 +79,7 @@ module Decorum
 
     # leaving it to you to, say, call this from #initialize
     def load_decorators_from_class
-      self.class.decorators.each { |decorator_class, options| decorate(decorator_class, options) }
+      self.class.decorators.each { |decorator_class, options| use_decorum(decorator_class, options) }
       self
     end
 
@@ -94,7 +94,7 @@ module Decorum
 
       decorator = @_decorator_chain
       @_decorators = []
-      until decorator.is_a?(Decorum::ChainStop) 
+      until decorator.is_a?(Decorum::ChainStop)
         @_decorators << decorator
         decorator = decorator.next_link
       end
@@ -120,7 +120,7 @@ module Decorum
     def _decorator_namespaces
       @_decorator_namespaces ||= []
     end
- 
+
     module Decorum::Decorations::Intercept
       def method_missing(message, *args, &block)
         response = catch :chain_stop do
@@ -128,7 +128,7 @@ module Decorum
         end
         response.is_a?(Decorum::ChainStop) ? super : response
       end
-      
+
       def respond_to_missing?(message, include_private = false)
         _decorators.each { |d| return true if d.respond_to?(message) }
         super
@@ -174,7 +174,7 @@ module Decorum
     end
 
     def remove_from_decorator_chain(decorator)
-      if decorator.is_a?(CallableDecorator) 
+      if decorator.is_a?(CallableDecorator)
         decorator = decorator.instance_variable_get(:@_decorator)
       end
 
@@ -188,7 +188,7 @@ module Decorum
         previous_decorator = _decorators[_decorators.index(decorator) - 1]
         previous_decorator.next_link = decorator.next_link
       end
-      
+
       unless _decorators!.map { |d| d.class }.include?(decorator.class)
         @_decorated_state[decorator.class] = nil
       end

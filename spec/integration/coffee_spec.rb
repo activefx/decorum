@@ -4,13 +4,13 @@ describe "when Bob is ordering a cup of coffee" do
   let(:coffee) { Decorum::Examples::Coffee.new }
 
   before(:each) do
-    coffee.decorate(Decorum::Examples::MilkDecorator, animal: "cow", milk_type: "2 percent")
-    coffee.decorate(Decorum::Examples::MilkDecorator, animal: "cow", milk_type: "2 percent")
-    coffee.decorate(Decorum::Examples::SugarDecorator)
+    coffee.use_decorum(Decorum::Examples::MilkDecorator, animal: "cow", milk_type: "2 percent")
+    coffee.use_decorum(Decorum::Examples::MilkDecorator, animal: "cow", milk_type: "2 percent")
+    coffee.use_decorum(Decorum::Examples::SugarDecorator)
     coffee.add_milk
     coffee.add_sugar
   end
-  
+
   it 'adds up to two milks' do
     expect(coffee.milk_level).to be(2)
   end
@@ -20,13 +20,13 @@ describe "when Bob is ordering a cup of coffee" do
   end
 
   context "things get interesting" do
-    before(:each) do 
+    before(:each) do
       ["bear", "man", "pig"].each do |critter|
-        coffee.decorate(Decorum::Examples::MilkDecorator, animal: critter)
+        coffee.use_decorum(Decorum::Examples::MilkDecorator, animal: critter)
       end
-      coffee.add_milk 
+      coffee.add_milk
     end
-    
+
     it 'gets another squirt from those original two cow milks' do
       # just so we're clear on how this works---you have to clear
       # the shared state yourself
